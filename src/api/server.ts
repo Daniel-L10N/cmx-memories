@@ -7,7 +7,6 @@ import express, { type Express } from 'express';
 import cors from 'cors';
 import { initializeDatabase } from '../db/connection.js';
 import memoriesRouter from './routes/memories.js';
-import searchRouter from './routes/search.js';
 import typesRouter from './routes/types.js';
 import { errorHandler, notFoundHandler } from './middleware/error.js';
 
@@ -27,9 +26,8 @@ export function createApp(): Express {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // API Routes
+  // API Routes - order matters! Search must be before :id
   app.use('/api/memories', memoriesRouter);
-  app.use('/api/memories/search', searchRouter);
   app.use('/api/types', typesRouter);
 
   // Error handling
@@ -42,17 +40,30 @@ export function createApp(): Express {
 /**
  * Start the API server
  */
-export function startServer(port?: number): void {
+export function startServer(port?: number, host?: string): void {
   const serverPort = port || parseInt(process.env.CMX_API_PORT || '3000', 10);
+  const serverHost = host || process.env.CMX_API_HOST || '0.0.0.0';
+  const apiKey = process.env.CMX_API_KEY || 'cmx-dev-key';
 
   // Initialize database before starting server
   initializeDatabase();
 
   const app = createApp();
 
-  app.listen(serverPort, () => {
-    console.log(`API server running on port ${serverPort}`);
-    console.log(`Health check: http://localhost:${serverPort}/health`);
+  // API Key middleware
+  app.use('/api', (req, res, next) => {
+    const key = req.headers['x-api-key'] as string;
+    if (!key || key !== apiKey) {
+      res.status(401).json({ error: 'Unauthorized. Provide X-API-Key header.' });
+      return;
+    }
+    next();
+  });
+
+  app.listen(serverPort, serverHost, () => {
+    console.log(`API server running on http://${serverHost}:${serverPort}`);
+    console.log(`Health check: http://${serverHost}:${serverPort}/health`);
+    console.log(`API Key: ${apiKey}`);
     console.log(`API endpoints:`);
     console.log(`  POST   /api/memories       - Create memory`);
     console.log(`  GET    /api/memories       - List memories`);

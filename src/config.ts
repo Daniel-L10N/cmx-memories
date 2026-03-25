@@ -1,11 +1,7 @@
 import { readFileSync, existsSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { resolve } from 'path';
 import YAML from 'yaml';
 import type { Config } from './types/index.js';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const projectRoot = resolve(__dirname, '../..');
 
 /**
  * Default configuration values

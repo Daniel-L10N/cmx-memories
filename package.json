@@ -12,8 +12,10 @@
     "dev": "tsx src/cli/index.ts",
     "start": "node dist/cli/index.js",
     "api": "tsx src/api/index.ts",
+    "api:remote": "tsx src/api/index.ts 3000 0.0.0.0",
     "api:build": "tsc -p tsconfig.api.json",
     "api:start": "node dist/api/index.js",
+    "mcp": "tsx src/mcp/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "typecheck": "tsc --noEmit",
@@ -31,6 +33,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "better-sqlite3": "^11.6.0",
     "commander": "^14.0.3",
     "cors": "^2.8.6",

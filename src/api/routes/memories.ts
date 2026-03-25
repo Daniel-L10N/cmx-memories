@@ -84,6 +84,59 @@ router.get(
 );
 
 /**
+ * GET /api/memories/search - Search memories (Engram-compatible)
+ */
+router.get(
+  '/search',
+  asyncHandler(async (req, res) => {
+    const { q, type, project, limit } = req.query;
+    const queryText = (q && typeof q === 'string') ? q : '';
+    const limitNum = limit ? parseInt(limit as string, 10) : 10;
+    const typeFilter = type as string | undefined;
+    const projectFilter = project as string | undefined;
+    
+    // Import search service
+    const searchModule = await import('../../services/search.service.js');
+    const advancedSearch = searchModule.advancedSearch;
+    
+    let results;
+    if (queryText.trim()) {
+      // Use advanced search with query - required field
+      const searchResults = await advancedSearch(queryText, {
+        query: queryText,
+        type: typeFilter,
+        project: projectFilter,
+        limit: limitNum,
+      });
+      results = searchResults;
+    } else {
+      // Filter-only - pass empty query to advancedSearch
+      const filterResults = await advancedSearch('', {
+        query: '',
+        type: typeFilter,
+        project: projectFilter,
+        limit: limitNum,
+      });
+      results = filterResults;
+    }
+
+    // Format like Engram
+    res.json({
+      memories: results.map((r) => ({
+        id: r.id,
+        title: r.title,
+        content: r.content,
+        contentPreview: r.contentPreview,
+        type: r.type,
+        score: r.score,
+        createdAt: r.createdAt,
+      })),
+      total: results.length,
+    });
+  })
+);
+
+/**
  * GET /api/memories/:id - Get a specific memory
  */
 router.get(

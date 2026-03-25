@@ -26,6 +26,27 @@ function getDefaultTypeId(): string {
 }
 
 /**
+ * Ensure a memory type exists, create if not
+ */
+function ensureTypeExists(typeName: string): void {
+  const db = getDatabase();
+  const existing = db.prepare('SELECT id FROM memory_types WHERE name = ?').get(typeName) as { id: string } | undefined;
+  
+  if (!existing) {
+    // Create the type with default schema
+    db.prepare(`
+      INSERT INTO memory_types (id, name, schema, version, created_at, updated_at)
+      VALUES (?, ?, NULL, 1, ?, ?)
+    `).run(
+      `type-${typeName}`,
+      typeName,
+      Date.now(),
+      Date.now()
+    );
+  }
+}
+
+/**
  * Create a new memory
  * Implements FTS5 indexing on create
  */
@@ -33,6 +54,11 @@ export async function createMemory(input: MemoryInput): Promise<Memory> {
   const db = getDatabase();
   const now = new Date();
   const id = generateId();
+  
+  // Ensure type exists and get its ID
+  if (input.type) {
+    ensureTypeExists(input.type);
+  }
   
   // Get type ID from type name
   const typeId = input.type 

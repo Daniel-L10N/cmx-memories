@@ -12,6 +12,7 @@ import * as searchCommands from './commands/search.js';
 import * as updateCommands from './commands/update.js';
 import * as deleteCommands from './commands/delete.js';
 import * as typeCommands from './commands/type.js';
+import * as goalCommands from './commands/goal.js';
 
 const program = new Command();
 
@@ -41,6 +42,7 @@ program.addCommand(searchCommands.searchCommand);
 program.addCommand(updateCommands.updateCommand);
 program.addCommand(deleteCommands.deleteCommand);
 program.addCommand(typeCommands.typeCommand);
+program.addCommand(goalCommands.goalCommand);
 
 export { program };
 

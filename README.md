@@ -1,29 +1,120 @@
 # cmx-memories
 
-Local-first personal memory system with SQLite + Drizzle and hybrid search.
+Local-first personal memory system with SQLite + hybrid search for AI agents.
 
 ## Features
 
-- **SQLite + Drizzle ORM** - Local database with type-safe queries
-- **Hybrid Search** - Full-text search (FTS) + optional vector search
-- **CLI Interface** - Manage memories from the command line
-- **API Server** - REST API for external integrations
-- **Configurable** - YAML-based configuration
-- **Multiple Memory Types** - memory, idea, task, note
+- **MCP Server** - Compatible with any MCP client (Claude Desktop, OpenCode, etc.)
+- **API REST** - HTTP API for integrations
+- **CLI** - Command line interface
+- **FTS5 Search** - Full-text search with advanced filters
+- **Multiple Types** - memory, idea, task, note, goal, decision, bugfix, etc.
+- **Project Goals** - Track project objectives
 
-## Installation
+## Quick Start
 
 ```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/cmx-memories.git
-cd cmx-memories
-
-# Install dependencies
+# Install
 npm install
 
-# Build
-npm run build
+# Start MCP Server (for AI agents)
+npm run mcp
+
+# Or start API Server (for HTTP clients)
+npm run api:remote
+
+# Or use CLI
+npm run dev -- help
 ```
+
+## MCP Tools (for AI Agents)
+
+| Tool | Description |
+|------|-------------|
+| `mem_save` | Save memory with structured content |
+| `mem_search` | Search memories by keyword |
+| `mem_get` | Get memory by ID |
+| `mem_update` | Update a memory |
+| `mem_delete` | Delete a memory |
+| `mem_list` | List all memories |
+| `goal_set` | Set project goal |
+| `goal_get` | Get project goal |
+| `mem_session_summary` | Save session summary |
+| `mem_context` | Get context from previous sessions |
+
+## Using with Claude Desktop
+
+```json
+{
+  "mcpServers": {
+    "cmx-memories": {
+      "command": "npm",
+      "args": ["run", "mcp"],
+      "cwd": "/path/to/cmx-memories"
+    }
+  }
+}
+```
+
+## Using with OpenCode
+
+Edit `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "mcp": {
+    "cmx-memories": {
+      "command": ["npm", "run", "mcp"],
+      "enabled": true,
+      "type": "local"
+    }
+  }
+}
+```
+
+## Using with any AI (via API)
+
+```bash
+# Start the API server
+npm run api:remote
+
+# Then call the API
+curl -H "X-API-Key: cmx-dev-key" \
+  -H "Content-Type: application/json" \
+  -X POST http://localhost:3000/api/memories \
+  -d '{
+    "title": "Fixed auth bug",
+    "content": "**What**: Fixed JWT token validation\n**Why**: Tokens were expiring early",
+    "type": "bugfix"
+  }'
+```
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/memories` | Create memory |
+| GET | `/api/memories` | List memories |
+| GET | `/api/memories/:id` | Get memory |
+| PUT | `/api/memories/:id` | Update memory |
+| DELETE | `/api/memories/:id` | Delete memory |
+| GET | `/api/memories/search` | Search memories |
+| GET | `/api/types` | List memory types |
+| GET | `/health` | Health check |
+
+## Memory Types
+
+- **memory** - Generic memory
+- **idea** - Ideas with tags
+- **task** - Tasks with priority
+- **note** - Notes with source
+- **goal** - Project goals/objectives
+- **decision** - Architecture decisions
+- **bugfix** - Bug fixes
+- **architecture** - Architecture patterns
+- **config** - Configuration changes
+- **discovery** - Technical discoveries
+- **preference** - User preferences
 
 ## Configuration
 
@@ -36,22 +127,19 @@ project:
 
 memoryPaths:
   - "./docs/memories"
-  - "./notes"
 
 index:
   ftsEnabled: true
   vectorEnabled: false
 ```
 
-## Usage
+## Environment Variables
 
-```bash
-# CLI
-npm run dev -- add "my first memory"
-
-# API Server
-npm run api
-```
+| Variable | Default | Description |
+|----------|---------|-------------|
+| CMX_API_PORT | 3000 | API server port |
+| CMX_API_HOST | 0.0.0.0 | API server host |
+| CMX_API_KEY | cmx-dev-key | API key for authentication |
 
 ## License
 

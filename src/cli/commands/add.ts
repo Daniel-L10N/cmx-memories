@@ -25,11 +25,13 @@ export const addCommand = new Command('add')
   }) => {
     try {
       let metadata: Record<string, unknown> = {};
-      try {
-        metadata = options.metadata ? JSON.parse(options.metadata) : {};
-      } catch {
-        console.error('Error: Invalid JSON for metadata');
-        process.exit(1);
+      if (options.metadata && options.metadata !== '{}') {
+        try {
+          metadata = JSON.parse(options.metadata);
+        } catch {
+          console.error('Error: Invalid JSON for metadata');
+          process.exit(1);
+        }
       }
 
       // Add project to metadata if provided

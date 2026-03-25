@@ -67,6 +67,31 @@ export interface SearchOptions {
   enableVectors?: boolean;
 }
 
+export interface AdvancedSearchOptions extends SearchOptions {
+  // Filtros de fecha
+  createdAfter?: Date;
+  createdBefore?: Date;
+  updatedAfter?: Date;
+  updatedBefore?: Date;
+  
+  // Filtros por metadata
+  tags?: string[];           // Buscar en tags dentro de metadata
+  metadata?: Record<string, unknown>; // Filtros exactos en metadata
+  
+  // Filtros de contenido
+  contentContains?: string;  // Buscar en contenido
+  titleContains?: string;    // Buscar en título
+  
+  // Búsqueda avanzada
+  fuzzy?: boolean;           // Búsqueda fuzzy/ aproximada
+  fuzzyThreshold?: number;  // Threshold para fuzzy (0-1)
+  regex?: boolean;          // Usar regex en la búsqueda
+  
+  // Ordenamiento
+  sortBy?: 'relevance' | 'createdAt' | 'updatedAt' | 'title';
+  sortDir?: 'asc' | 'desc';
+}
+
 export interface SearchResult {
   id: string;
   title: string;

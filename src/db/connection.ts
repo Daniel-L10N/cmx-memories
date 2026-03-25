@@ -2,12 +2,6 @@ import Database from 'better-sqlite3';
 import { resolve } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { getConfig } from '../config.js';
-import { 
-  FTS_CREATE_SQL, 
-  FTS_TRIGGERS_SQL 
-} from './fts.js';
-import { memoryTypes, memories, memoryMetadata } from './schema.js';
-import type { MemoryTypeDefinition } from '../types/index.js';
 
 /**
  * Database instance - initialized on first use
@@ -31,13 +25,6 @@ export function getDatabase(): Database.Database {
 export function getDbPath(): string {
   const config = getConfig();
   return resolve(process.cwd(), config.dbPath);
-}
-
-/**
- * Generate a unique ID
- */
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
 /**
@@ -75,8 +62,6 @@ export function initializeDatabase(): Database.Database {
  * Run SQL migrations to create tables
  */
 function runMigrations(database: Database.Database): void {
-  const migrationsPath = import.meta.dirname + '/migrations/001_initial.sql';
-  
   // Read and execute the initial migration
   const migrationSql = `
     -- Memory Types Table
@@ -188,6 +173,7 @@ function seedDefaultTypes(database: Database.Database): void {
     { id: 'type-idea', name: 'idea', schema: JSON.stringify({ fields: [{ name: 'tags', type: 'array' }, { name: 'status', type: 'string' }] }) },
     { id: 'type-task', name: 'task', schema: JSON.stringify({ fields: [{ name: 'priority', type: 'string' }, { name: 'dueDate', type: 'string' }] }) },
     { id: 'type-note', name: 'note', schema: JSON.stringify({ fields: [{ name: 'source', type: 'string' }] }) },
+    { id: 'type-goal', name: 'goal', schema: JSON.stringify({ fields: [{ name: 'project', type: 'string' }, { name: 'targetDate', type: 'string' }] }) },
   ];
 
   const insertStmt = database.prepare(`

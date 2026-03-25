@@ -1,11 +1,11 @@
 /**
- * Search Service - Hybrid FTS5 + Vector search
+ * Search Service - Hybrid FTS5 + Vector search with Advanced Filters
  * Phase 2: Core Services
  */
 
 import { getDatabase } from '../db/connection.js';
 import { getConfig } from '../config.js';
-import type { SearchOptions, SearchResult } from '../types/index.js';
+import type { SearchOptions, SearchResult, AdvancedSearchOptions } from '../types/index.js';
 
 // Internal type for search options without query (for internal calls)
 interface SearchFilterOptions {
@@ -286,4 +286,239 @@ interface FtsSearchRow {
   score: number;
   createdAt: number;
   updatedAt: number;
+}
+
+/**
+ * Advanced Search - Filtros inteligentes y búsqueda sofisticada
+ */
+export async function advancedSearch(
+  query: string,
+  options?: AdvancedSearchOptions
+): Promise<SearchResult[]> {
+  const db = getDatabase();
+  const limit = options?.limit || 10;
+  
+  // Si es solo búsqueda por filtros (sin query de texto)
+  if (!query || query.trim() === '') {
+    return advancedFilterSearch(options);
+  }
+  
+  // Construir consulta SQL dinámica
+  let sql = `
+    SELECT 
+      m.id,
+      m.title,
+      m.content,
+      mt.name as typeName,
+      bm25(memories_fts) as score,
+      m.created_at as createdAt,
+      m.updated_at as updatedAt
+    FROM memories_fts
+    JOIN memories m ON memories_fts.rowid = m.rowid
+    JOIN memory_types mt ON m.type_id = mt.id
+    WHERE memories_fts MATCH ?
+  `;
+  const params: (string | number)[] = [sanitizeFtsQuery(query)];
+  
+  // Filtros de tipo
+  if (options?.type) {
+    sql += ' AND mt.name = ?';
+    params.push(options.type);
+  }
+  
+  // Filtros por proyecto (en metadata)
+  if (options?.project) {
+    sql += " AND m.metadata LIKE ?";
+    params.push(`%"project":"${options.project}"%`);
+  }
+  
+  // Filtros por fecha de creación
+  if (options?.createdAfter) {
+    sql += ' AND m.created_at >= ?';
+    params.push(options.createdAfter.getTime());
+  }
+  if (options?.createdBefore) {
+    sql += ' AND m.created_at <= ?';
+    params.push(options.createdBefore.getTime());
+  }
+  
+  // Filtros por fecha de actualización
+  if (options?.updatedAfter) {
+    sql += ' AND m.updated_at >= ?';
+    params.push(options.updatedAfter.getTime());
+  }
+  if (options?.updatedBefore) {
+    sql += ' AND m.updated_at <= ?';
+    params.push(options.updatedBefore.getTime());
+  }
+  
+  // Ordenamiento
+  const sortBy = options?.sortBy || 'relevance';
+  const sortDir = options?.sortDir || 'desc';
+  
+  switch (sortBy) {
+    case 'createdAt':
+      sql += ` ORDER BY m.created_at ${sortDir.toUpperCase()}`;
+      break;
+    case 'updatedAt':
+      sql += ` ORDER BY m.updated_at ${sortDir.toUpperCase()}`;
+      break;
+    case 'title':
+      sql += ` ORDER BY m.title ${sortDir.toUpperCase()}`;
+      break;
+    case 'relevance':
+    default:
+      sql += ' ORDER BY score';
+      break;
+  }
+  
+  sql += ' LIMIT ?';
+  params.push(limit);
+  
+  const stmt = db.prepare(sql);
+  const rows = stmt.all(...params) as FtsSearchRow[];
+  
+  // Filtrar post-búsqueda por tags si se especificó
+  let results = rows.map(row => ({
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    contentPreview: createPreview(row.content),
+    type: row.typeName,
+    score: Math.abs(row.score),
+    createdAt: new Date(row.createdAt),
+  }));
+  
+  // Filtrar por tags en metadata
+  if (options?.tags && options.tags.length > 0) {
+    results = results.filter(r => {
+      // Obtener metadata de la memoria
+      const mem = getMemoryById(r.id);
+      if (!mem?.metadata) return false;
+      
+      const memTags = mem.metadata.tags as string[] || [];
+      return options.tags!.some(tag => memTags.includes(tag));
+    });
+  }
+  
+  return results;
+}
+
+/**
+ * Búsqueda avanzada solo con filtros (sin texto)
+ */
+async function advancedFilterSearch(
+  options?: AdvancedSearchOptions
+): Promise<SearchResult[]> {
+  const db = getDatabase();
+  const limit = options?.limit || 10;
+  
+  let sql = `
+    SELECT 
+      m.id,
+      m.title,
+      m.content,
+      mt.name as typeName,
+      m.created_at as createdAt,
+      m.updated_at as updatedAt
+    FROM memories m
+    JOIN memory_types mt ON m.type_id = mt.id
+    WHERE 1=1
+  `;
+  const params: (string | number)[] = [];
+  
+  // Filtros de tipo
+  if (options?.type) {
+    sql += ' AND mt.name = ?';
+    params.push(options.type);
+  }
+  
+  // Filtros por proyecto
+  if (options?.project) {
+    sql += " AND m.metadata LIKE ?";
+    params.push(`%"project":"${options.project}"%`);
+  }
+  
+  // Filtros por fecha de creación
+  if (options?.createdAfter) {
+    sql += ' AND m.created_at >= ?';
+    params.push(options.createdAfter.getTime());
+  }
+  if (options?.createdBefore) {
+    sql += ' AND m.created_at <= ?';
+    params.push(options.createdBefore.getTime());
+  }
+  
+  // Filtro por búsqueda en título
+  if (options?.titleContains) {
+    sql += ' AND m.title LIKE ?';
+    params.push(`%${options.titleContains}%`);
+  }
+  
+  // Filtro por búsqueda en contenido
+  if (options?.contentContains) {
+    sql += ' AND m.content LIKE ?';
+    params.push(`%${options.contentContains}%`);
+  }
+  
+  // Ordenamiento
+  const sortBy = options?.sortBy || 'createdAt';
+  const sortDir = options?.sortDir || 'desc';
+  
+  switch (sortBy) {
+    case 'updatedAt':
+      sql += ` ORDER BY m.updated_at ${sortDir.toUpperCase()}`;
+      break;
+    case 'title':
+      sql += ` ORDER BY m.title ${sortDir.toUpperCase()}`;
+      break;
+    case 'createdAt':
+    default:
+      sql += ` ORDER BY m.created_at ${sortDir.toUpperCase()}`;
+      break;
+  }
+  
+  sql += ' LIMIT ?';
+  params.push(limit);
+  
+  const stmt = db.prepare(sql);
+  const rows = stmt.all(...params) as FtsSearchRow[];
+  
+  return rows.map(row => ({
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    contentPreview: createPreview(row.content),
+    type: row.typeName,
+    score: 1,
+    createdAt: new Date(row.createdAt),
+  }));
+}
+
+/**
+ * Obtener una memoria por ID (helper para filtros)
+ */
+function getMemoryById(id: string): { metadata?: Record<string, unknown> } | null {
+  const db = getDatabase();
+  const stmt = db.prepare('SELECT metadata FROM memories WHERE id = ?');
+  const row = stmt.get(id) as { metadata: string } | undefined;
+  
+  if (!row) return null;
+  
+  try {
+    return { metadata: row.metadata ? JSON.parse(row.metadata) : undefined };
+  } catch {
+    return { metadata: undefined };
+  }
+}
+
+/**
+ * Búsqueda semántica (simulada - requiere embeddings reales)
+ */
+export async function semanticSearch(
+  query: string,
+  options?: SearchOptions
+): Promise<SearchResult[]> {
+  console.warn('Semantic search requires embeddings - falling back to FTS5');
+  return search(query, options);
 }
