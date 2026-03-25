@@ -1,7 +1,14 @@
 {
   "name": "cmx-memories",
   "version": "1.0.0",
-  "description": "Local-first personal memory system with SQLite + Drizzle and hybrid search",
+  "description": "Local-first personal memory system with SQLite + hybrid search for AI agents",
+  "author": "Daniel L10N <Daniel-L10N@github.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/Daniel-L10N/cmx-memories",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Daniel-L10N/cmx-memories"
+  },
   "main": "dist/index.js",
   "type": "module",
   "bin": {
@@ -30,8 +37,6 @@
     "local-first",
     "cli"
   ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "better-sqlite3": "^11.6.0",
