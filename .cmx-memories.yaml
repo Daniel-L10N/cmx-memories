@@ -1,0 +1,55 @@
+# cmx-memories Configuration
+# Agent project file for local-first memory management
+
+version: "1.0"
+project:
+  name: "cmx-memories"
+  dbPath: "./memories.db"
+
+# Memory paths to index
+memoryPaths:
+  - "./docs/memories"
+  - "./notes"
+
+# Index configuration
+index:
+  ftsEnabled: true
+  vectorEnabled: false  # Enable for semantic search (requires sqlite-vec)
+  embeddingModel: "local"  # or "openai", "cohere"
+  hybridWeights:
+    fts: 0.6
+    vector: 0.4
+
+# Agent bindings
+agents:
+  opencode:
+    enabled: true
+    autoIndex: true
+  vscode:
+    enabled: false
+    extensionPath: "./extensions/cmx-memories"
+
+# Default memory types
+customTypes:
+  - name: "memory"
+    schema:
+      fields: []
+  - name: "idea"
+    schema:
+      fields:
+        - name: "tags"
+          type: "array"
+        - name: "status"
+          type: "string"
+  - name: "task"
+    schema:
+      fields:
+        - name: "priority"
+          type: "string"
+        - name: "dueDate"
+          type: "string"
+  - name: "note"
+    schema:
+      fields:
+        - name: "source"
+          type: "string"
