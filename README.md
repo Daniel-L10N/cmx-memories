@@ -8,7 +8,7 @@ Local-first personal memory system with SQLite + hybrid search for AI agents.
 
 **Daniel L10N**
 - GitHub: [@Daniel-L10N](https://github.com/Daniel-L10N)
-- Email: Daniel-L10N@github.com
+- Email: alejandrolazolemus@gmail.com
 - Location: Mexico
 
 ## Features
