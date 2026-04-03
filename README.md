@@ -152,4 +152,54 @@ index:
 
 ## License
 
+## Sistema de servicio (systemd)
+
+Para que el servidor always-on funcione como servicio del sistema:
+
+### Installation
+
+El servicio se encuentra en: `~/.config/systemd/user/cmx-memories.service`
+
+Para activarlo:
+
+```bash
+# Recargar systemd
+systemctl --user daemon-reload
+
+# Habilitar auto-inicio
+systemctl --user enable cmx-memories.service
+
+# Iniciar el servicio
+systemctl --user start cmx-memories.service
+
+# Verificar estado
+systemctl --user status cmx-memories.service
+```
+
+### Comandos
+
+```bash
+# Estado del servicio
+systemctl --user status cmx-memories
+
+# Reiniciar
+systemctl --user restart cmx-memories
+
+# Ver logs en tiempo real
+journalctl --user -u cmx-memories -f
+
+# Detener
+systemctl --user stop cmx-memories
+
+# Deshabilitar auto-inicio
+systemctl --user disable cmx-memories
+```
+
+### Verificación
+
+Una vez activo, el API responde en:
+```
+http://localhost:3000/cmx-memories/api/memories
+```
+
 MIT
