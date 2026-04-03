@@ -260,3 +260,12 @@ interface MemoryRow {
   updated_at: number;
   typeName?: string;
 }
+/**
+ * Get type name by type ID
+ */
+export function getTypeNameById(typeId: string): string {
+  const db = getDatabase();
+  const stmt = db.prepare('SELECT name FROM memory_types WHERE id = ?');
+  const row = stmt.get(typeId) as { name: string } | undefined;
+  return row?.name || typeId;
+}

@@ -200,6 +200,19 @@ export async function typeExists(name: string): Promise<boolean> {
 }
 
 /**
+ * Get default memory types (hardcoded list)
+ */
+export function getDefaultTypes(): Array<{ id: string; name: string; schema: TypeSchema | null }> {
+  return [
+    { id: 'type-memory', name: 'memory', schema: null },
+    { id: 'type-idea', name: 'idea', schema: { fields: [{ name: 'tags', type: 'array' }, { name: 'status', type: 'string' }] } },
+    { id: 'type-task', name: 'task', schema: { fields: [{ name: 'priority', type: 'string' }, { name: 'dueDate', type: 'string' }] } },
+    { id: 'type-note', name: 'note', schema: { fields: [{ name: 'source', type: 'string' }] } },
+    { id: 'type-goal', name: 'goal', schema: { fields: [{ name: 'project', type: 'string' }, { name: 'targetDate', type: 'string' }] } },
+  ];
+}
+
+/**
  * Map database row to MemoryTypeDefinition
  */
 function mapRowToType(row: TypeRow): MemoryTypeDefinition {

@@ -31,7 +31,8 @@
     "typecheck": "tsc --noEmit",
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "mcp:remote": "MCP_MODE=http MCP_BASE_PATH=/cmx-memories tsx src/mcp/index.ts"
   },
   "keywords": [
     "memory",

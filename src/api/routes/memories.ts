@@ -10,6 +10,7 @@ import {
   updateMemory,
   deleteMemory,
   listMemories,
+  getTypeNameById,
 } from '../../services/memory.service.js';
 import { asyncHandler } from '../middleware/error.js';
 
@@ -44,7 +45,7 @@ router.post(
       id: memory.id,
       title: memory.title,
       content: memory.content,
-      type: memory.typeId,
+      type: getTypeNameById(memory.typeId),
       metadata: memory.metadata,
       createdAt: memory.createdAt,
       updatedAt: memory.updatedAt,
@@ -73,7 +74,7 @@ router.get(
         id: m.id,
         title: m.title,
         content: m.content,
-        type: m.typeId,
+        type: getTypeNameById(m.typeId),
         metadata: m.metadata,
         createdAt: m.createdAt,
         updatedAt: m.updatedAt,
@@ -159,7 +160,7 @@ router.get(
       id: memory.id,
       title: memory.title,
       content: memory.content,
-      type: memory.typeId,
+      type: getTypeNameById(memory.typeId),
       metadata: memory.metadata,
       createdAt: memory.createdAt,
       updatedAt: memory.updatedAt,
@@ -180,7 +181,7 @@ router.put(
       id: memory.id,
       title: memory.title,
       content: memory.content,
-      type: memory.typeId,
+      type: getTypeNameById(memory.typeId),
       metadata: memory.metadata,
       createdAt: memory.createdAt,
       updatedAt: memory.updatedAt,

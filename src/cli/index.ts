@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * CLI Entry Point - cmx-memories command line interface
  * Phase 3: CLI Interface

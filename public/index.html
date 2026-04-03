@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>cmx-memories | Gestor de Memorias</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h1 { color: #58a6ff; margin-bottom: 20px; font-size: 1.8rem; display: flex; align-items: center; gap: 10px; }
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
+    .btn-primary { background: #238636; color: #fff; }
+    .btn-primary:hover { background: #2ea043; }
+    .btn-danger { background: #da3633; color: #fff; }
+    .btn-danger:hover { background: #f85149; }
+    .btn-secondary { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
+    .btn-small { padding: 6px 12px; font-size: 12px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; color: #8b949e; font-size: 14px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 1px solid #30363d; border-radius: 6px; background: #161b22; color: #e6edf3; font-size: 14px; }
+    .form-group textarea { min-height: 120px; resize: vertical; font-family: monospace; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 25px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; }
+    .modal h2 { color: #58a6ff; margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+    .search-box input { flex: 1; padding: 15px; border: 1px solid #30363d; border-radius: 8px; font-size: 16px; background: #161b22; color: #fff; }
+    .search-box input:focus { outline: none; border-color: #58a6ff; }
+    .search-box button { padding: 15px 25px; border: none; border-radius: 8px; background: #238636; color: #fff; font-weight: bold; cursor: pointer; }
+    .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filters select, .filters input { padding: 10px 15px; border: 1px solid #30363d; border-radius: 6px; background: #161b22; color: #fff; font-size: 14px; }
+    .memory-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin-bottom: 15px; border-left: 4px solid #58a6ff; }
+    .memory-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .memory-title { color: #58a6ff; font-size: 18px; font-weight: 600; }
+    .memory-actions { display: flex; gap: 8px; }
+    .memory-meta { font-size: 12px; color: #8b949e; margin-bottom: 12px; }
+    .memory-content { background: #0d1117; padding: 15px; border-radius: 8px; white-space: pre-wrap; line-height: 1.7; color: #c9d1d9; font-family: monospace; font-size: 13px; max-height: 200px; overflow-y: auto; }
+    .expand-btn { background: none; border: none; color: #58a6ff; cursor: pointer; margin-top: 10px; }
+    .no-results { text-align: center; color: #8b949e; padding: 60px 20px; }
+    .loading { text-align: center; color: #58a6ff; padding: 40px; }
+    .toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; background: #238636; color: #fff; border-radius: 8px; font-weight: 500; transform: translateY(100px); transition: transform 0.3s; z-index: 2000; }
+    .toast.show { transform: translateY(0); }
+    .toast.error { background: #da3633; }
+    .autocomplete { position: absolute; background: #1c2128; border: 2px solid #58a6ff; border-radius: 8px; max-height: 300px; overflow-y: auto; z-index: 999; display: none; }
+    .autocomplete-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #30363d; }
+    .autocomplete-item:hover { background: #238636; }
+    .autocomplete-title { color: #58a6ff; font-weight: 600; }
+    .autocomplete-type { color: #8b949e; font-size: 12px; }
+    .autocomplete-snippet { color: #8b949e; font-size: 11px; margin-top: 4px; }
+    .search-wrapper { position: relative; flex: 1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧠 cmx-memories <button class="btn btn-primary" id="newBtn">+ Nueva</button></h1>
+    <div class="search-box">
+      <div class="search-wrapper">
+        <input type="text" id="searchInput" placeholder="Buscar..." autocomplete="off">
+        <div class="autocomplete" id="autocomplete"></div>
+      </div>
+      <button class="btn btn-primary" id="searchBtn">Buscar</button>
+    </div>
+    <div class="filters">
+      <select id="typeFilter"><option value="">Todos</option><option value="memory">memory</option><option value="architecture">architecture</option><option value="goal">goal</option><option value="idea">idea</option><option value="note">note</option><option value="task">task</option></select>
+      <input type="text" id="projectFilter" placeholder="Proyecto..." style="width:150px">
+      <input type="number" id="limitFilter" value="20" min="1" max="100" style="width:80px">
+    </div>
+    <div id="results"></div>
+  </div>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h2 id="modalTitle">Nueva Memoria</h2>
+      <form id="memoryForm">
+        <input type="hidden" id="memoryId">
+        <div class="form-group"><label>Título *</label><input type="text" id="memoryTitle" required></div>
+        <div class="form-group"><label>Tipo</label><select id="memoryType"><option value="memory">memory</option><option value="architecture">architecture</option><option value="goal">goal</option><option value="idea">idea</option><option value="note">note</option><option value="task">task</option></select></div>
+        <div class="form-group"><label>Contenido *</label><textarea id="memoryContent" required></textarea></div>
+        <div class="form-group"><label>Proyecto</label><input type="text" id="memoryProject"></div>
+        <div class="form-group"><label>Metadata (JSON)</label><textarea id="memoryMetadata" style="min-height:80px"></textarea></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    var API_BASE = '/cmx-memories/api';
+    var currentQuery = '';
+    var editingId = null;
+
+    function showToast(msg, err) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast' + (err ? ' error' : '');
+      setTimeout(function() { t.classList.add('show'); }, 100);
+      setTimeout(function() { t.classList.remove('show'); }, 3000);
+    }
+
+    function openModal(mem) {
+      if (mem) {
+        document.getElementById('modalTitle').textContent = 'Editar';
+        document.getElementById('memoryId').value = mem.id;
+        document.getElementById('memoryTitle').value = mem.title;
+        document.getElementById('memoryType').value = mem.type || 'memory';
+        document.getElementById('memoryContent').value = mem.content;
+        var m = mem.metadata || {};
+        document.getElementById('memoryProject').value = m.project || '';
+        document.getElementById('memoryMetadata').value = m ? JSON.stringify(m, null, 2) : '';
+        editingId = mem.id;
+      } else {
+        document.getElementById('modalTitle').textContent = 'Nueva';
+        document.getElementById('memoryForm').reset();
+        editingId = null;
+      }
+      document.getElementById('modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+      editingId = null;
+    }
+
+    function escapeHtml(t) { if(!t)return''; var d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+
+    function render(memories) {
+      var r = document.getElementById('results');
+      if (!memories || !memories.length) { r.innerHTML='<div class="no-results"><h3>No hay memorias</h3></div>'; return; }
+      var html = '';
+      for (var i=0; i<memories.length; i++) {
+        var m = memories[i];
+        var meta = m.metadata || {};
+        html += '<div class="memory-card"><div class="memory-header"><div class="memory-title">'+escapeHtml(m.title)+'</div><div class="memory-actions"><button class="btn btn-secondary btn-small" onclick="editMem(\''+m.id+'\')">✏️</button><button class="btn btn-danger btn-small" onclick="deleteMem(\''+m.id+'\')">🗑️</button></div></div><div class="memory-meta"><span>📁 '+(m.type||'memory')+'</span><span>📅 '+new Date(m.createdAt).toLocaleDateString('es-MX')+'</span>'+(meta.project?'<span>📂 '+escapeHtml(meta.project)+'</span>':'')+'</div><div class="memory-content" id="c-'+m.id+'">'+escapeHtml(m.content)+'</div><button class="expand-btn" onclick="toggle(\''+m.id+'\')">Ver más</button></div>';
+      }
+      r.innerHTML = html;
+    }
+
+    function toggle(id) {
+      var c = document.getElementById('c-'+id);
+      c.style.maxHeight = c.style.maxHeight ? '' : 'none';
+    }
+
+    function search(q) {
+      currentQuery = q;
+      document.getElementById('results').innerHTML = '<div class="loading">Cargando...</div>';
+      var params = [];
+      if (q) params.push('q='+encodeURIComponent(q));
+      var tf = document.getElementById('typeFilter').value;
+      if (tf) params.push('type='+encodeURIComponent(tf));
+      var pf = document.getElementById('projectFilter').value;
+      if (pf) params.push('project='+encodeURIComponent(pf));
+      params.push('limit='+document.getElementById('limitFilter').value);
+      var url = API_BASE + (q ? '/search?' : '/paginate?') + params.join('&');
+      fetch(url).then(function(res){return res.json();}).then(function(d){
+        var ms = d.results || d.memories || [];
+        render(ms);
+      }).catch(function(e){
+        document.getElementById('results').innerHTML = '<div class="no-results">Error: '+e.message+'</div>';
+      });
+    }
+
+    function editMem(id) {
+      fetch(API_BASE+'/memories/'+id).then(function(r){return r.json();}).then(function(d){openModal(d);});
+    }
+
+    function deleteMem(id) {
+      if (!confirm('Eliminar?')) return;
+      fetch(API_BASE+'/memories/'+id,{method:'DELETE'}).then(function(r){
+        if (r.ok) { showToast('Eliminada'); search(currentQuery); }
+        else showToast('Error',true);
+      });
+    }
+
+    document.getElementById('memoryForm').onsubmit = function(e) {
+      e.preventDefault();
+      var id = document.getElementById('memoryId').value;
+      var data = {
+        title: document.getElementById('memoryTitle').value,
+        type: document.getElementById('memoryType').value,
+        content: document.getElementById('memoryContent').value,
+        metadata: {}
+      };
+      var proj = document.getElementById('memoryProject').value;
+      if (proj) data.metadata.project = proj;
+      var meta = document.getElementById('memoryMetadata').value;
+      if (meta.trim()) try { Object.assign(data.metadata, JSON.parse(meta)); } catch(e){ showToast('JSON inválido',true); return; }
+      fetch(API_BASE+'/memories'+(id?'/'+id:''),{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(function(r){return r.json();}).then(function(d){
+        showToast(id?'Actualizada':'Creada');
+        closeModal();
+        search(currentQuery);
+      });
+    };
+
+    // Autocomplete
+    var suggestTimeout;
+    document.getElementById('searchInput').oninput = function() {
+      var q = this.value;
+      clearTimeout(suggestTimeout);
+      var dropdown = document.getElementById('autocomplete');
+      if (!q || q.length < 2) { dropdown.style.display = 'none'; return; }
+      suggestTimeout = setTimeout(function() {
+        fetch(API_BASE+'/suggest?q='+encodeURIComponent(q)+'&limit=5').then(function(r){return r.json();}).then(function(d){
+          var s = d.suggestions || [];
+          if (!s.length) { dropdown.style.display = 'none'; return; }
+          var html = '';
+          for (var i=0; i<s.length; i++) {
+            html += '<div class="autocomplete-item" onclick="selectSuggestion(\''+escapeHtml(s[i].title)+'\')"><div class="autocomplete-title">'+escapeHtml(s[i].title)+'</div><div class="autocomplete-type">📁 '+(s[i].type||'memory')+'</div>'+(s[i].snippet?'<div class="autocomplete-snippet">'+escapeHtml(s[i].snippet)+'</div>':'')+'</div>';
+          }
+          dropdown.innerHTML = html;
+          dropdown.style.display = 'block';
+        });
+      }, 300);
+    };
+
+    document.getElementById('searchInput').onblur = function() {
+      setTimeout(function(){ document.getElementById('autocomplete').style.display = 'none'; }, 200);
+    };
+
+    function selectSuggestion(title) {
+      document.getElementById('searchInput').value = title;
+      document.getElementById('autocomplete').style.display = 'none';
+      search(title);
+    }
+
+    // Event listeners
+    document.getElementById('newBtn').onclick = function(){ openModal(null); };
+    document.getElementById('cancelBtn').onclick = closeModal;
+    document.getElementById('searchBtn').onclick = function(){ search(document.getElementById('searchInput').value); };
+    document.getElementById('searchInput').onkeypress = function(e){ if(e.key==='Enter') search(this.value); };
+    document.getElementById('typeFilter').onchange = function(){ search(currentQuery); };
+    document.getElementById('projectFilter').oninput = function(){ search(currentQuery); };
+    document.getElementById('modal').onclick = function(e){ if(e.target.id==='modal') closeModal(); };
+
+    // Init
+    search('');
+  </script>
+</body>
+</html>

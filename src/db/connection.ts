@@ -9,6 +9,13 @@ import { getConfig } from '../config.js';
 let db: Database.Database | null = null;
 
 /**
+ * Set the database instance (for testing)
+ */
+export function setGlobalDatabase(database: Database.Database): void {
+  db = database;
+}
+
+/**
  * Get the database instance
  * Throws if not initialized
  */

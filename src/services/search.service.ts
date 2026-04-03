@@ -220,11 +220,13 @@ function createPreview(content: string): string {
  * Sanitize query for FTS5 - escape special characters
  */
 function sanitizeFtsQuery(query: string): string {
-  // Escape special FTS5 operators
-  return query
-    .replace(/['"]/g, '') // Remove quotes
-    .replace(/[*\-+\(\)]/g, ' ') // Replace operators with space
-    .trim();
+  // Escape special FTS5 operators and normalize query
+  let q = query
+    .replace(/['"]/g, '')
+    .replace(/[*\-+\(\):]/g, ' ')
+    .replace(/\./g, ' ')
+    .replace(/\s+/g, ' ');
+  return q.trim().toLowerCase();
 }
 
 /**

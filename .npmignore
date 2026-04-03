@@ -1,0 +1,43 @@
+# Source files - only include dist
+src/
+scripts/
+
+# Development files
+.env
+.env.*
+*.log
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+*.test.ts
+*.spec.ts
+coverage/
+
+# Documentation
+*.md
+!README.md  # Keep README for npm
+
+# Docker
+Dockerfile*
+docker-compose*
+nginx.*
+
+# Database (user will create their own)
+*.db
+*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (not needed in package)
+node_modules/
+npm-debug.log*
+yarn-error.log

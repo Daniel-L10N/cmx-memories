@@ -1,60 +1,57 @@
-/**
- * Search Routes - Search memories
- * Phase 5: REST API
- */
-
-import { Router } from 'express';
-import { search } from '../../services/search.service.js';
-import { asyncHandler } from '../middleware/error.js';
+import { Router, type Request, type Response } from 'express';
+import { advancedSearch, searchByFilter } from '../../services/search.service.js';
+import { listMemories } from '../../services/memory.service.js';
 
 const router = Router();
 
 /**
- * GET /api/memories/search - Search memories
- * Query params:
- *   - q: Search query (required)
- *   - type: Filter by memory type
- *   - limit: Max results (default: 10)
- *   - project: Filter by project (via metadata)
+ * GET /search
+ * Search memories by query
  */
-router.get(
-  '/',
-  asyncHandler(async (req, res) => {
-    const query = req.query.q as string;
-    const type = req.query.type as string | undefined;
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
-    const project = req.query.project as string | undefined;
-
-    if (!query) {
-      res.status(400).json({
-        error: {
-          message: 'Search query (q) is required',
-          code: 'VALIDATION_ERROR',
-        },
-      });
+router.get('/', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { q, type, project, limit = 10 } = req.query;
+    const limitNum = parseInt(limit as string, 10) || 10;
+    
+    if (!q || (q as string).trim() === '') {
+      const memories = await listMemories({ limit: limitNum });
+      res.json({ results: memories, total: memories.length, type: 'recent' });
       return;
     }
-
-    const results = await search(query, {
-      query,
-      type,
-      limit,
-      project,
+    
+    const results = await advancedSearch(q as string, {
+      query: q as string,
+      type: type as string,
+      project: project as string,
+      limit: limitNum,
     });
+    
+    res.json({ results, total: results.length, type: 'search' });
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ error: 'Search failed' });
+  }
+});
 
-    res.json({
-      results: results.map((r) => ({
-        id: r.id,
-        title: r.title,
-        content: r.content,
-        contentPreview: r.contentPreview,
-        type: r.type,
-        score: r.score,
-        createdAt: r.createdAt,
-      })),
-      total: results.length,
+/**
+ * GET /filter
+ * Filter memories without full-text search
+ */
+router.get('/filter', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { type, project, limit = 20 } = req.query;
+    const limitNum = parseInt(limit as string, 10) || 20;
+    
+    const results = await searchByFilter({
+      type: type as string,
+      project: project as string,
+      limit: limitNum,
     });
-  })
-);
+    
+    res.json({ results, total: results.length });
+  } catch (error) {
+    res.status(500).json({ error: 'Filter failed' });
+  }
+});
 
 export default router;
