@@ -1,6 +1,6 @@
 # cmx-memories
 
-> Created by [Daniel L10N](https://github.com/Daniel-L10N) | [LinkedIn](https://linkedin.com/in/daniell10n)
+> Created by [Daniel L10N](https://github.com/Daniel-L10N) | [LinkedIn](https://www.linkedin.com/in/daniel-alejandro-lazo-023a03311/)
 
 Local-first personal memory system with SQLite + hybrid search for AI agents.
 
