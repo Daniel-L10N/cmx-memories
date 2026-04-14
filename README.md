@@ -36,6 +36,61 @@ npm run api:remote
 npm run dev -- help
 ```
 
+## Installation
+
+### Linux/macOS
+
+```bash
+npm install
+npm run dev -- help
+```
+
+### Windows
+
+1. **Install Node.js** (version 18+ LTS)
+   - Download from: https://nodejs.org/
+
+2. **Open PowerShell** in the project folder
+
+3. **Install dependencies:**
+```powershell
+npm install
+```
+
+4. **Run:**
+```powershell
+# CLI
+npm run dev -- help
+
+# API Server
+npm run api
+
+# MCP Server
+npm run mcp
+```
+
+5. **If you have issues with better-sqlite3:**
+```powershell
+# Rebuild native modules
+npm rebuild better-sqlite3
+```
+
+### Migration (Linux to Windows)
+
+1. **Backup your database:**
+```bash
+cp memories.db memories-backup.db
+```
+
+2. **Copy the entire project folder** to your Windows machine
+
+3. **In Windows, run:**
+```powershell
+npm install
+```
+
+Your existing memories will work automatically!
+
 ## MCP Tools (for AI Agents)
 
 | Tool | Description |
